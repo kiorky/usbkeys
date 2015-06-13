@@ -16,15 +16,16 @@
 cd "$(dirname $0)"
 C="$(pwd)"
 chrono="$(date +"%F-%H%H%S")"
-USAGE="$0 key_mountpath [ uefi | mbr ] [ umount ]"
+USAGE="$0 key_mountpath [ uefi | mbr ] [ umount ] [ nobak ]"
 mounted="$1"
 cd "${mounted}"
 MOUNTED="$(pwd)"
 EFIMOUNTED="${MOUNTED}/boot/efi"
-DEVICE="$(mount|grep ${MOUNTED}|awk '{print $1}'|sed "s/[0-9]*$//g")"
+DEVICE="$(mount|grep ${MOUNTED}|awk '{print $1}'|sed "s/[0-9]*$//g"|tail -n1)"
 efi=""
 mbr=""
 doumount=""
+nobak=""
 shift
 for i in ${@};do
     if [ "x${i}" = "xuefi" ] || [ "x${i}" = "xefi" ];then
@@ -35,6 +36,9 @@ for i in ${@};do
     fi
     if [ "x${i}" = "xumount" ];then
         doumount=1
+    fi
+    if [ "x${i}" = "xnobak" ];then
+        nobak=1
     fi
 done
 if [ "x$efi" != "x" ] && [ "x$mbr" != "x" ];then
@@ -60,19 +64,23 @@ fi
 ropts="-rlpgoDzv --no-times"
 ropts="-azv"
 cd $MOUNTED
-if [ -e boot ];then tar cjvf "boot-${chrono}.tar.bz2" boot;fi
+if [ "x${nobak}" = "x" ] && [ -e boot ];then tar cjvf "boot-${chrono}.tar.bz2" boot;fi
 if [ "x${nocopy}" = "x" ];then rsync $ropts $C/ $MOUNTED/;fi
 if [ "x$efi" != "x" ];then
-    rsync $ropts --delete "$MOUNTED/boot.uefi/grub2" "$MOUNTED/boot.uefi/grub"
-    rsync $ropts --delete "$MOUNTED/boot.uefi/" "$MOUNTED/boot/"
-    rsync $ropts --delete "$MOUNTED/boot.uefi/" "$MOUNTED/boot/boot/"
-    grub2-install --efi-directory="$MOUNTED/boot/efi/"   --boot-directory="$MOUNTED/boot/" --target=x86_64-efi --recheck --removable $DEVICE
+    boot="boot.uefi"
 fi
 if [ "x$mbr" != "x" ];then
-    rsync $ropts --delete "$MOUNTED/boot.mbr/grub2" "$MOUNTED/boot.mbr/grub"
-    rsync $ropts --delete "$MOUNTED/boot.mbr/" $MOUNTED/boot/
-    rsync $ropts --delete "$MOUNTED/boot.mbr/" $MOUNTED/boot/boot/
-    grub2-install --boot-directory="$MOUNTED/boot/" --target=i386-pc --recheck $DEVICE
+    boot="boot.mbr"
+fi
+rsync $ropts --delete "$MOUNTED/$boot/grub2/" "$MOUNTED/boot.uefi/grub/"
+rsync $ropts --delete --exclude=boot "$MOUNTED/$boot/" "$MOUNTED/boot/"
+rsync $ropts --delete "$MOUNTED/$boot/" "$MOUNTED/boot/boot/"
+if which grub2-install >/dev/null 2>&1;then gi="grub2-install";else gi="grub-install";fi
+if [ "x$efi" != "x" ];then
+    $gi --efi-directory="$MOUNTED/boot/efi/"   --boot-directory="$MOUNTED/boot/" --target=x86_64-efi --recheck --removable $DEVICE
+fi
+if [ "x$mbr" != "x" ];then
+    $gi --boot-directory="$MOUNTED/boot/" --target=i386-pc --recheck $DEVICE
 fi
 cd /
 if [ "x${doumount}" != "x" ];then

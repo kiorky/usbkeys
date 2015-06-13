@@ -13,6 +13,17 @@
 #
 # USAGE:
 #  SEE $USAGE
+#
+# to install mbr from a efi platform
+# apt-get install grub-pc
+# ./dokey.sh $args
+# apt-get install grub-efi
+#
+# to install efi from a nonefi platform
+# apt-get install grub-efi
+# ./dokey.sh $args
+# apt-get install grub-pc
+#
 cd "$(dirname $0)"
 C="$(pwd)"
 chrono="$(date +"%F-%H%H%S")"
@@ -72,7 +83,7 @@ fi
 if [ "x$mbr" != "x" ];then
     boot="boot.mbr"
 fi
-rsync $ropts --delete "$MOUNTED/$boot/grub2/" "$MOUNTED/boot.uefi/grub/"
+rsync $ropts --delete "$MOUNTED/$boot/grub2/" "$MOUNTED/$boot/grub/"
 rsync $ropts --delete --exclude=boot "$MOUNTED/$boot/" "$MOUNTED/boot/"
 rsync $ropts --delete "$MOUNTED/$boot/" "$MOUNTED/boot/boot/"
 if which grub2-install >/dev/null 2>&1;then gi="grub2-install";else gi="grub-install";fi

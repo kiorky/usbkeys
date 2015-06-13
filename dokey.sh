@@ -21,6 +21,7 @@ mounted="$1"
 cd "${mounted}"
 MOUNTED="$(pwd)"
 EFIMOUNTED="${MOUNTED}/boot/efi"
+DEVICE="$(mount|grep ${MOUNTED}|awk '{print $1}'|sed "s/[0-9]*$//g")"
 efi=""
 mbr=""
 doumount=""
@@ -34,7 +35,7 @@ for i in ${@};do
     fi
     if [ "x${i}" = "xumount" ];then
         doumount=1
-    fi     
+    fi
 done
 if [ "x$efi" != "x" ] && [ "x$mbr" != "x" ];then
     echo "$USAGE";exit 1
@@ -56,16 +57,22 @@ fi
 if [ "x${MOUNTED}" = "x" ] || [ ! -d "${MOUNTED}" ] ;then
     echo key not mounted;exit 1
 fi
+ropts="-rlpgoDzv --no-times"
+ropts="-azv"
 cd $MOUNTED
 if [ -e boot ];then tar cjvf "boot-${chrono}.tar.bz2" boot;fi
-if [ "x${nocopy}" = "x" ];then rsync -Aazv $C/ $MOUNTED/;fi
+if [ "x${nocopy}" = "x" ];then rsync $ropts $C/ $MOUNTED/;fi
 if [ "x$efi" != "x" ];then
-    rsync -Aazv --delete "$MOUNTED/boot.uefi/" "$MOUNTED/boot/"
-    grub2-install --efi-directory="$MOUNTED/boot/efi/"   --boot-directory="$MOUNTED/boot/" --target=x86_64-efi --recheck --removable $MOUNTED
+    rsync $ropts --delete "$MOUNTED/boot.uefi/grub2" "$MOUNTED/boot.uefi/grub"
+    rsync $ropts --delete "$MOUNTED/boot.uefi/" "$MOUNTED/boot/"
+    rsync $ropts --delete "$MOUNTED/boot.uefi/" "$MOUNTED/boot/boot/"
+    grub2-install --efi-directory="$MOUNTED/boot/efi/"   --boot-directory="$MOUNTED/boot/" --target=x86_64-efi --recheck --removable $DEVICE
 fi
 if [ "x$mbr" != "x" ];then
-    rsync -Aazv --delete "$MOUNTED/boot.mbr/" $MOUNTED/boot/
-    grub2-install --boot-directory="$MOUNTED/boot/" --target=i386-pc --recheck $MOUNTED
+    rsync $ropts --delete "$MOUNTED/boot.mbr/grub2" "$MOUNTED/boot.mbr/grub"
+    rsync $ropts --delete "$MOUNTED/boot.mbr/" $MOUNTED/boot/
+    rsync $ropts --delete "$MOUNTED/boot.mbr/" $MOUNTED/boot/boot/
+    grub2-install --boot-directory="$MOUNTED/boot/" --target=i386-pc --recheck $DEVICE
 fi
 cd /
 if [ "x${doumount}" != "x" ];then

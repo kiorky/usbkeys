@@ -27,7 +27,7 @@
 cd "$(dirname $0)"
 C="$(pwd)"
 chrono="$(date +"%F-%H%H%S")"
-USAGE="$0 key_mountpath [ uefi | mbr ] [ umount ] [ nobak ]"
+USAGE="$0 key_mountpath [ uefi | mbr ] [ umount ] [ nobak ] [noisos]"
 mounted="$1"
 cd "${mounted}"
 MOUNTED="$(pwd)"
@@ -37,6 +37,7 @@ efi=""
 mbr=""
 doumount=""
 nobak=""
+noisos=""
 shift
 for i in ${@};do
     if [ "x${i}" = "xuefi" ] || [ "x${i}" = "xefi" ];then
@@ -50,6 +51,9 @@ for i in ${@};do
     fi
     if [ "x${i}" = "xnobak" ];then
         nobak=1
+    fi
+    if [ "x${i}" = "xnoisos" ];then
+        noisos="--exclude=isos"
     fi
 done
 if [ "x$efi" != "x" ] && [ "x$mbr" != "x" ];then
@@ -72,11 +76,11 @@ fi
 if [ "x${MOUNTED}" = "x" ] || [ ! -d "${MOUNTED}" ] ;then
     echo key not mounted;exit 1
 fi
-ropts="-rlpgoDzv --no-times"
-ropts="-azv"
+ropts="-azv go "
+ropts="-rlpDzvc --no-times"
 cd $MOUNTED
 if [ "x${nobak}" = "x" ] && [ -e boot ];then tar cjvf "boot-${chrono}.tar.bz2" boot;fi
-if [ "x${nocopy}" = "x" ];then rsync $ropts $C/ $MOUNTED/;fi
+if [ "x${nocopy}" = "x" ];then rsync $ropts $noisos $C/ $MOUNTED/;fi
 if [ "x$efi" != "x" ];then
     boot="boot.uefi"
 fi

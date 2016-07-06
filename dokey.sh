@@ -88,15 +88,15 @@ rsync $ropts --delete --exclude=boot "$MOUNTED/$boot/" "$MOUNTED/boot/"
 rsync $ropts --delete "$MOUNTED/$boot/" "$MOUNTED/boot/boot/"
 if which grub2-install >/dev/null 2>&1;then gi="grub2-install";else gi="grub-install";fi
 if [ "x$efi" != "x" ];then
-    $gi --efi-directory="$MOUNTED/boot/efi/"   --boot-directory="$MOUNTED/boot/" --target=x86_64-efi --recheck --removable $DEVICE
+    $gi --efi-directory="$EFIMOUNTED" --boot-directory="$MOUNTED/boot/" --target=x86_64-efi --recheck --removable $DEVICE
 fi
 if [ "x$mbr" != "x" ];then
     $gi --boot-directory="$MOUNTED/boot/" --target=i386-pc --recheck $DEVICE
 fi
 cd /
 if [ "x${doumount}" != "x" ];then
-    if [ "x${EFIMOUNTED}" != "x" ];then
-        umount $MOUNTED/boot/efi
+    if [ "x$(ls ${EFIMOUNTED} 2>/dev/null)" != "x" ];then
+        umount $EFIMOUNTED
     fi
     umount $MOUNTED
 fi

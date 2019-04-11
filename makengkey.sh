@@ -9,7 +9,9 @@ NO_ISOS="${NO_ISOS-}"
 NO_GRUB="${NO_GRUB-}"
 NO_MBR_GRUB="${NO_MBR_GRUB-${NO_MBR-$NO_GRUB}}"
 NO_EFI_GRUB="${NO_EFI_GRUB-${NO_EFI-$NO_GRUB}}"
+NO_DOS_LABEL="${NO_DOS_LABEL-1}"
 NO_EFI32_GRUB="${NO_EFI32_GRUB-${NO_EFI-$NO_GRUB}}"
+DOS_LABEL=${DOS_LABEL:-USBBOOT}
 MOUNTED="$1"
 EFIMOUNTED="$MOUNTED/efi/liveusb"
 EFIMOUNTED="$MOUNTED/efi"
@@ -61,7 +63,11 @@ if [[ -z $NO_GRUB ]];then
                 --force --boot-directory=$MOUNTED/boot/ \
                 --target=i386-pc --recheck --removable $GRUBBLOCK
         fi
+        if [[ -z $NO_DOS_LABEL ]];then
+            dosfslabel $DEVICE $DOS_LABEL
+        fi
         sudo sed -i -r \
+            -e "s/USBBOOT/${DOS_LABEL}/g" \
             -e "s/gpt2/${BLOCKTYPE}${BLOCKNUMBER}/g" \
             $MOUNTED/boot/grub/grub.cfg
     fi

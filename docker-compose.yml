@@ -1,0 +1,15 @@
+version: "3.8"
+services:
+  app:
+    build: {context: "."}
+    volumes:
+    - ./boot.mbr:/app/boot.mbr
+    - ./boot.uefi:/app/boot.uefi
+    - ./dokey.sh:/app/dokey.sh
+    - ./efi:/app/efi
+    - ./isos:/app/isos
+    - ./efi_from_laptops/:/app/efi_from_laptops
+    - ./makengkey.sh:/app/makengkey.sh
+    - ./refresh_efi_stubs.sh:/app/refresh_efi_stubs.sh
+    - ./apt.txt:/app/apt.txt
+    privileged: true

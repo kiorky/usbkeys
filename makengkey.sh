@@ -51,17 +51,17 @@ if [[ -z $NO_GRUB ]];then
         if [[ -z $NO_EFI32_GRUB ]];then
             sudo grub-install --efi-directory=$EFIMOUNTED \
                 --boot-directory=$MOUNTED/boot/ \
-                --target=i386-efi --recheck --removable $GRUBBLOCK
+                --target=i386-efi --removable $GRUBBLOCK
         fi
         if [[ -z $NO_EFI_GRUB ]];then
             sudo grub-install --efi-directory=$EFIMOUNTED \
                 --boot-directory=$MOUNTED/boot/ \
-                --target=x86_64-efi --recheck --removable $GRUBBLOCK
+                --target=x86_64-efi --removable $GRUBBLOCK
         fi
         if [[ -z $NO_MBR_GRUB ]];then
             LANG=C sudo grub-install \
                 --force --boot-directory=$MOUNTED/boot/ \
-                --target=i386-pc --recheck --removable $GRUBBLOCK
+                --target=i386-pc --removable $GRUBBLOCK
         fi
         if [[ -z $NO_DOS_LABEL ]];then
             dosfslabel $DEVICE $DOS_LABEL

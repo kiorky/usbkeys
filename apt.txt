@@ -1,0 +1,9 @@
+grub-pc-bin
+grub-efi-ia32-bin
+grub-efi-amd64-bin
+ubuntu-server
+lvm2
+cryptsetup
+rsync
+sudo
+
